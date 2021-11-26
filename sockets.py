@@ -66,16 +66,16 @@ def set_listener( entity, data ):
 
 myWorld.add_set_listener( set_listener )
 
-clients = list()
+# Source: https://github.com/uofa-cmput404/cmput404-slides/blob/master/examples/WebSocketsExamples/chat.py
 
+clients = list()
 
 def send_all(msg):
     for client in clients:
-        client.put(msg)
-
+        client.put( msg )
 
 def send_all_json(obj):
-    send_all(json.dumps(obj))
+    send_all( json.dumps(obj) )
 
 
 class Client:
@@ -93,16 +93,15 @@ def hello():
     '''Return something coherent here.. perhaps redirect to /static/index.html '''
     return flask.redirect("/static/index.html")
 
-def read_ws(ws,client):
-    '''A greenlet function that reads from the websocket and updates the world'''
-    # XXX: TODO IMPLEMENT ME
+def read_ws(ws):
+    '''A greenlet function that reads from the websocket'''
     try:
         while True:
             msg = ws.receive()
             print("WS RECV: %s" % msg)
             if (msg is not None):
                 packet = json.loads(msg)
-                send_all_json(packet)
+                send_all_json( packet )
             else:
                 break
     except:
@@ -115,13 +114,13 @@ def subscribe_socket(ws):
     # XXX: TODO IMPLEMENT ME
     client = Client()
     clients.append(client)
-    g = gevent.spawn(read_ws, ws, client)
+    g = gevent.spawn( read_ws, ws, client )    
     try:
         while True:
             # block here
             msg = client.get()
             ws.send(msg)
-    except Exception as e:  # WebSocketError as e:
+    except Exception as e: # WebSocketError 
         print("WS Error %s" % e)
     finally:
         clients.remove(client)

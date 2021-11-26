@@ -44,19 +44,40 @@
 
         world = {};
 
+        world = {};
+
+        var red = 0;
+        var green = 0;
+        var blue = 0; 
+        var colors = [];
+        for (red = 0; red <= 255; red+=5) {
+            for (green = 0; green <= 255; green+=5) {
+                for (blue = 0; blue <= 255; blue+=5) {
+                    colors.push("rgb" + "(" + String(red) + ", " + String(green) + ", " + String(blue) + ")");
+                }
+            }
+        }
+        var color_counter = 0;
+        // console.log(colors)
+
         //XXX: TODO Make this prettier!
         function drawCircle(context,entity) {
             with(context) {
-                beginPath();                
+                beginPath();              
                 lineWidth = 3;
                 var x = entity["x"];
                 var y = entity["y"];
                 //moveTo(x,y);
                 fillStyle = entity["colour"];
                 strokeStyle = fillStyle;
-                arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);  
-                stroke();                                
+                // turn off shadowColor to reduce lag, but I kept it on because I'm extra like that.
+                shadowColor = colors[color_counter];
+                shadowBlur = 30;
+                arc(x, y, (entity["radius"])?entity["radius"]:50, 0, 2.0 * Math.PI, false);
+                stroke();                                 
             }
+            color_counter++;
+            // console.log(color_counter)
         }
 
         function prepEntity(entity) {
@@ -125,9 +146,9 @@
             world[entity] = data;
             drawNextFrame(); // (but should we?)
             //XXX: Send a XHTML Request that updates the entity you just modified!
-            json_wrapper = {};
-            json_wrapper[entity] = data;
-            socket.send(JSON.stringify(json_wrapper));
+            request_send = {};
+            request_send[entity] = data;
+            socket.send(JSON.stringify(request_send));
         }
         var counter = 0;
         function addEntityWithoutName(data) {
@@ -233,17 +254,16 @@
 
         // Add the application specific mouse listeners!
         //XXX: TODO Make these prettier!
-        mouse.mousedowners.push(function(x,y,clicked,e) {
-            addEntityWithoutName({'x':x,'y':y,'colour':'blue'});
+        mouse.mousedowners.push(function(x,y,clicked,e) { // start click 
+            addEntityWithoutName({'x':x,'y':y,'colour':'white', 'radius':30});
         });
 
-        mouse.mouseuppers.push(function(x,y,clicked,e) {
-            addEntityWithoutName({'x':x,'y':y,'colour':'red'});
+        mouse.mouseuppers.push(function(x,y,clicked,e) { // release click 
+            addEntityWithoutName({'x':x,'y':y,'colour':'white', 'radius':30});
         });
 
-        mouse.mousedraggers.push(function(x,y,clicked,e) {
-            addEntityWithoutName({'x':x,'y':y,'colour':'green',
-                                'radius':10});
+        mouse.mousedraggers.push(function(x,y,clicked,e) { // click and drag 
+            addEntityWithoutName({'x':x,'y':y,'colour':'white', 'radius':30});
         });
 
 
@@ -263,8 +283,13 @@
             };
             socket.onmessage = function(msg) {  
                 try {
-                    debug("WebSocket Recv:" + msg.data);
+                    debug("WebSocket Recv:" + msg.data); // msg.data = {"X93": {"x": 260, "y": 391, "colour": "green", "radius": 10}}
                     //XXX: TODO What are you going to do here?            
+                    var state = JSON.parse(msg.data);
+                    var location = Object.keys(state)[0];
+                    console.log(state, location) // {X37: {…}}X37: {x: 109, y: 197, colour: 'white', radius: 30}[[Prototype]]: Object 'X37'
+                    world[location] = state[location];
+                    drawNextFrame()
                 } catch (e) {
                     alert("socket on message: " + e);
                 }
