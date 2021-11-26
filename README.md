@@ -60,3 +60,7 @@ Contributors
 * Abram Hindle
 * Cole Mackenzie
 * Michelle Wang
+
+Collaborators:
+============
+Maristella Jho
